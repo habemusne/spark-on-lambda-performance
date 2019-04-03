@@ -1,5 +1,6 @@
 ## connect
 user name: ec2-user
+
 ip: 34.219.68.150
 
 ## run
