@@ -43,8 +43,8 @@ aws_secret_access_key=PLEASE ENTER
 - In the Lambda console scroll down. At the Network panel, pick "Default vpc..."->choose all subnets->choose all security groups->"Save" **TODO: this part needs more work**
 
 ```
-aws s3 cp s3://public-qubole/lambda/spark-lambda-149.zip s3://<username>-cse597cc/
-aws s3 cp s3://public-qubole/lambda/spark-2.1.0-bin-spark-lambda-2.1.0.tgz s3://<username>-cse597cc/
+aws s3 cp s3://public-qubole/lambda/spark-lambda-149.zip s3://<your-name>-cse597cc/
+aws s3 cp s3://public-qubole/lambda/spark-2.1.0-bin-spark-lambda-2.1.0.tgz s3://<your-name>-cse597cc/
 
 sudo yum install python-pip -y
 sudo pip install numpy -U
