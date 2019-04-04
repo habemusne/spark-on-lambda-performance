@@ -5,22 +5,15 @@
 - Goto EC2 console, create an instance, first machine type (Amazon Linux x86), 10GB, security group please open ssh 22 inbound, use a private key pem. Everything else default.
 - Goto EC2 console, click Elastic IP on the left, create one and associate it to the instance
 - Goto your EC2 instance info and find your public IP if you scroll down.
-- connect to server: `ssh -o ServerAliveInterval=60 -i ~/.ssh/cc.pem ubuntu@<your-public-ip>`
+- Connect to server: `ssh -o ServerAliveInterval=60 -i ~/.ssh/cc.pem ubuntu@<your-public-ip>`
 - Next we begin the server configuration
 
 ```
 sudo yum update -y
-sudo amazon-linux-extras install docker -y
-sudo service docker start
-sudo usermod -a -G docker ec2-user
-```
-
-- Please logout and log back in again, then continue
-```
 sudo yum install git -y
+sudo yum install maven -y
 git clone https://github.com/aws/aws-sdk-java
 cd aws-sdk-java
-sudo yum install maven -y
 mvn clean install -pl aws-java-sdk-lambda -am -Dgpg.skip=true
 mvn clean install -pl aws-java-sdk-s3 -am -Dgpg.skip=true
 cd
