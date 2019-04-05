@@ -2,7 +2,7 @@
 
 - Goto AWS console, at the top right, choose "US East (N.Virginia)"
 - Goto S3 console and create a bucket named "\<your-name\>-cse597cc", everything else default
-- Goto EC2 console, create an instance, first machine type (Amazon Linux x86), 10GB, security group please open ssh 22 inbound, use a private key pem. Everything else default.
+- Goto EC2 console, create an instance, first machine type (Amazon Linux x86), 10GB, security group please open ssh 22 inbound, use a private key pem, name it `cc`. Everything else default.
 - Goto EC2 console, click Elastic IP on the left, create one and associate it to the instance
 - Goto your EC2 instance info and find your public IP if you scroll down.
 - Connect to server: `ssh -o ServerAliveInterval=60 -i ~/.ssh/cc.pem ubuntu@<your-public-ip>`
