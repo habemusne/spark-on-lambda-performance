@@ -7,7 +7,7 @@
 - Goto EC2 console, create an instance, first machine type (Amazon Linux x86), 10GB, security group please open ssh 22 inbound (please leave the "All Incoming Traffics" there), use a private key pem, name it `cc`. Everything else default.
 - Goto EC2 console, click Elastic IP on the left, create one and associate it to the instance
 - Goto your EC2 instance info and find your public IP if you scroll down.
-- Connect to server: `ssh -o ServerAliveInterval=60 -i ~/.ssh/cc.pem ubuntu@<your-public-ip>`
+- Connect to server: `ssh -o ServerAliveInterval=60 -i path/to/cc.pem ec2-user@<your-public-ip>`
 - Next we begin the server configuration
 
 ```
