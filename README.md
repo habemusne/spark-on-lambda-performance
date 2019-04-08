@@ -125,6 +125,11 @@ spark.shuffle.s3.bucket                         s3://<your-name-cse597cc>
 spark.lambda.s3.bucket                          s3://public-qubole
 ```
 
+## Test
+
+By now you should be able to run `/home/ec2-user/driver/bin/spark-submit --class org.apache.spark.examples.SparkPi --master lambda://test /home/ec2-user/driver/examples/jars/spark-examples_2.11-2.1.0.jar 2`. Please do NOT run this command under directorys that have `conf/` folder. Otherwise Spark will not find the correct conf file.
+
+
 ## Run
 
 Assume that you are in the project directory: `sudo ./../driver/bin/spark-submit ml_kmeans.py`
