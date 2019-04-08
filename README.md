@@ -1,5 +1,7 @@
 ## Server Setup
 
+**Please try to follow all the naming conventions here. You will likely meet some tough bugs if you don't.**
+
 - Goto AWS console, at the top right, choose "US East (N.Virginia)"
 - Goto S3 console and create a bucket named "\<your-name\>-cse597cc", everything else default
 - Goto EC2 console, create an instance, first machine type (Amazon Linux x86), 10GB, security group please open ssh 22 inbound, use a private key pem, name it `cc`. Everything else default.
@@ -35,12 +37,20 @@ aws_access_key_id=PLEASE ENTER
 aws_secret_access_key=PLEASE ENTER
 ```
 
+Edit `~/.aws/config`. Content of the file:
+
+```
+[default]
+region=us-east-1
+```
+
 - Goto [iam](https://console.aws.amazon.com/iam/home#/home), click "Roles"->"Create role"->Choose the service... click "Lambda"->"Next: Permissions"->AmazonEC2FullAccess,AWSLambdaFullAccess,AmazonS3FullAccess,AWSLambdaExecute,AWSLambdaVPCAccessExecutionRole,AWSLambdaRole->"Next: Tags"->"Next: Review"->Role name fill in "cse597cc"->"Create role"
 
 - Create a lambda function, "author from scratch", function name "spark-lambda", runtime "Python 2.7" (if you want to change this, not now). Click "Execution role"->"Use an existing role"->"cse597cc"->"Create function"
 
 - Copy code from [here](https://github.com/qubole/spark-on-lambda/blob/lambda-2.1.0/bin/lambda/spark-lambda-os.py) to the Lambda. Change "Handler" box to "lambda_function.handler". Click "Save"
 - In the Lambda console scroll down. At the Network panel, pick "Default vpc..."->choose all subnets->choose all security groups->"Save" **TODO: this part needs more work**
+- In the Lambda console scroll down, move the memory slider to 1024MB, set the timeout to 5min, click "Save"
 
 ```
 aws s3 cp s3://public-qubole/lambda/spark-lambda-149.zip s3://<your-name>-cse597cc/
@@ -49,7 +59,7 @@ aws s3 cp s3://public-qubole/lambda/spark-2.1.0-bin-spark-lambda-2.1.0.tgz s3://
 sudo yum install python-pip -y
 sudo pip install numpy -U
 
-cp ~/driver/bin/conf/spark-defauls.conf.template ~/driver/bin/conf/spark-defauls.conf
+cp ~/driver/conf/spark-defaults.conf.template ~/driver/bin/conf/spark-defauls.conf
 cd project
 ```
 
@@ -94,27 +104,32 @@ if __name__ == "__main__":
 
 - Edit `~/driver/bin/conf/spark-defauls.conf`. Content of the file:
 ```
-spark.shuffle.s3.enabled    true
-spark.shuffle.s3.bucket     s3://<your-name>-cse597cc/
-spark.lambda.s3.bucket      s3://<your-name>-cse597cc/
-spark.lambda.concurrent.requests.max  50
-spark.lambda.function.name    spark-lambda
-spark.lambda.spark.software.version 149
-spark.hadoop.fs.s3n.impl    org.apache.hadoop.fs.s3a.S3AFileSystem
-spark.hadoop.fs.s3.impl     org.apache.hadoop.fs.s3a.S3AFileSystem
-spark.hadoop.fs.AbstractFileSystem.s3.impl  org.apache.hadoop.fs.s3a.S3A
-spark.hadoop.fs.AbstractFileSystem.s3n.impl org.apache.hadoop.fs.s3a.S3A
-spark.hadoop.fs.AbstractFileSystem.s3a.impl org.apache.hadoop.fs.s3a.S3A
-spark.hadoop.fs.s3n.awsAccessKeyId  <PLEASE ENTER>
-spark.hadoop.fs.s3n.awsSecretAccessKey  <PLEASE ENTER>
-spark.dynamicAllocation.enabled   true
-spark.dynamicAllocation.minExecutors  2
+spark.dynamicAllocation.enabled                 true
+spark.dynamicAllocation.minExecutors            2
+spark.dynamicAllocation.maxExecutor             16
+spark.shuffle.s3.enabled                        true
+spark.lambda.concurrent.requests.max            100
+spark.hadoop.fs.s3n.impl                        org.apache.hadoop.fs.s3a.S3AFileSystem
+spark.hadoop.fs.s3.impl                         org.apache.hadoop.fs.s3a.S3AFileSystem
+spark.hadoop.fs.AbstractFileSystem.s3.impl      org.apache.hadoop.fs.s3a.S3A
+spark.hadoop.fs.AbstractFileSystem.s3n.impl     org.apache.hadoop.fs.s3a.S3A
+spark.hadoop.fs.AbstractFileSystem.s3a.impl     org.apache.hadoop.fs.s3a.S3A
+spark.hadoop.qubole.aws.use.v4.signature        true
+spark.hadoop.fs.s3a.fast.upload                 true
+spark.lambda.function.name                      spark-lambda
+spark.lambda.spark.software.version             149
+spark.hadoop.fs.s3a.endpoint                    s3.us-east-1.amazonaws.com
+spark.hadoop.fs.s3n.awsAccessKeyId              <YOUR ACCESS KEY>
+spark.hadoop.fs.s3n.awsSecretAccessKey          <YOUR SECRET>
+spark.shuffle.s3.bucket                         s3://<your-name-cse597cc>
+spark.lambda.s3.bucket                          s3://public-qubole
 ```
 
 ## Run
 
 Assume that you are in the project directory: `sudo ./../driver/bin/spark-submit ml_kmeans.py`
 
+Please do NOT run this command under directorys that have `conf/` folder. Otherwise Spark will not find the correct conf file.
+
 **This will run but fail, likely due to VPC configuration to collaborate all of the three parties (Lambda, EC2, S3). I am still working on it**
 
-**It's tough... Try to take a look into this issue if you have time.**
