@@ -1,6 +1,6 @@
 ## Server Setup
 
-**Please try to follow all the naming conventions here. You will likely meet some tough bugs if you don't.**
+**Please try to follow all the naming conventions here. You will likely encounter some tough bugs if you don't.**
 
 - Goto AWS console, at the top right, choose "US East (N.Virginia)"
 - Goto S3 console and create a bucket named "\<your-name\>-cse597cc", everything else default
