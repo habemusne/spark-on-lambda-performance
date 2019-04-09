@@ -48,7 +48,7 @@ region=us-east-1
 
 - Copy code from [here](https://github.com/qubole/spark-on-lambda/blob/lambda-2.1.0/bin/lambda/spark-lambda-os.py) to the Lambda. Change "Handler" box to "lambda_function.handler". Click "Save"
 - In the Lambda console scroll down. At the Network panel, pick "Default vpc..."->choose all subnets->choose all security groups->"Save" **TODO: this part needs more work**
-- In the Lambda console scroll down, move the memory slider to 1024MB, set the timeout to 5min, click "Save"
+- In the Lambda console scroll down, move the memory slider to 1024MB, set the timeout to 5min, in the Environment Vaiable add key/value as HOSTALIASES and /tmp/HOSTALIASES, click "Save"
 
 ```
 aws s3 cp s3://public-qubole/lambda/spark-lambda-149.zip s3://<your-name>-cse597cc/
@@ -125,7 +125,48 @@ spark.lambda.s3.bucket                          s3://public-qubole
 
 ## Test
 
-By now you should be able to run `/home/ec2-user/driver/bin/spark-submit --class org.apache.spark.examples.SparkPi --master lambda://test /home/ec2-user/driver/examples/jars/spark-examples_2.11-2.1.0.jar 2`. Please do NOT run this command under a directory that have `conf/` folder. Otherwise Spark will not find the correct conf file (`KeyError` if you inspect Lambda's logs on CloudWatch).
+You can run your code using `cd ~/driver && ./bin/spark-submit --master lambda://test path/to/your/python_script.py`. Please do NOT run this command under a directory that have `conf/` folder. Otherwise Spark will not find the correct conf file (`KeyError` if you inspect Lambda's logs on CloudWatch).
+
+You can the example Python files, but you need to change something. Before letting Spark read the file, you need to move the file to `/tmp/lambda/spark/`. Here is a working version that you can try out.
+
+```python
+from __future__ import print_function
+import os
+from pyspark.ml.clustering import KMeans
+from pyspark.sql import SparkSession
+
+if __name__ == "__main__":
+    spark = SparkSession\
+        .builder\
+        .appName("KMeansExample")\
+        .getOrCreate()
+
+    # $example on$
+    # Loads data.
+    data_folder = '/home/ec2-user/driver/data/mllib'
+    lambda_folder = '/tmp/lambda/spark/data/mllib'
+    filename = 'sample_kmeans_data.txt'
+    os.system('mkdir -p ' + lambda_folder)
+    os.system('cp {}/{} {}/{}'.format(data_folder, filename, lambda_folder, filename))
+    dataset = spark.read.format("libsvm").load('{}/{}'.format(lambda_folder, filename))
+
+    # Trains a k-means model.
+    kmeans = KMeans().setK(2).setSeed(1)
+    model = kmeans.fit(dataset)
+
+    # Evaluate clustering by computing Within Set Sum of Squared Errors.
+    wssse = model.computeCost(dataset)
+    print("Within Set Sum of Squared Errors = " + str(wssse))
+
+    # Shows the result.
+    centers = model.clusterCenters()
+    print("Cluster Centers: ")
+    for center in centers:
+        print(center)
+    # $example off$
+
+    spark.stop()
+```
 
 
 ## Run
