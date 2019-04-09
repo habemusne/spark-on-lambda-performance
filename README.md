@@ -125,7 +125,12 @@ spark.lambda.s3.bucket                          s3://public-qubole
 
 ## Test
 
-You can run your code using `cd ~/driver && ./bin/spark-submit --master lambda://test path/to/your/python_script.py`. Please do NOT run this command under a directory that have `conf/` folder. Otherwise Spark will not find the correct conf file (`KeyError` if you inspect Lambda's logs on CloudWatch).
+You should be able to run `cd ~/driver && ./bin/spark-submit --class org.apache.spark.examples.SparkPi --master lambda://test examples/jars/spark-examples_2.11-2.1.0.jar 2` by now, without error. Please do NOT run this command under a directory that has `conf/` folder. Otherwise Spark will not find the correct conf file (`KeyError` if you inspect Lambda's logs on CloudWatch).
+
+
+## Run
+
+You can run your code using `cd ~/driver && ./bin/spark-submit --master lambda://test path/to/your/python_script.py`. Please do NOT run this command under a directory that has `conf/` folder. Otherwise Spark will not find the correct conf file (`KeyError` if you inspect Lambda's logs on CloudWatch).
 
 You can the example Python files, but you need to change something. Before letting Spark read the file, you need to move the file to `/tmp/lambda/spark/`. Here is a working version that you can try out.
 
@@ -166,11 +171,4 @@ if __name__ == "__main__":
 ```
 
 
-## Run
-
-`sudo /home/ec2-user/driver/bin/spark-submit ml_kmeans.py`
-
-Please do NOT run this command under a directory that have `conf/` folder. Otherwise Spark will not find the correct conf file (`KeyError` if you inspect Lambda's logs on CloudWatch).
-
-**This will run but fail, likely due to VPC configuration to collaborate all of the three parties (Lambda, EC2, S3). I am still working on it**
 
