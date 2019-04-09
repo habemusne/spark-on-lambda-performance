@@ -141,8 +141,6 @@ if __name__ == "__main__":
         .appName("KMeansExample")\
         .getOrCreate()
 
-    # $example on$
-    # Loads data.
     data_folder = '/home/ec2-user/driver/data/mllib'
     lambda_folder = '/tmp/lambda/spark/data/mllib'
     filename = 'sample_kmeans_data.txt'
@@ -163,7 +161,6 @@ if __name__ == "__main__":
     print("Cluster Centers: ")
     for center in centers:
         print(center)
-    # $example off$
 
     spark.stop()
 ```
