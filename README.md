@@ -170,5 +170,8 @@ if __name__ == "__main__":
     spark.stop()
 ```
 
+## Miscellaneous
 
+1. You can turn off `INFO` logs by doing this: `cp ~/driver/conf/log4j.properties.template ~/driver/conf/log4j.properties`, then in `~/driver/conf/log4j.properties`, modify the line `log4j.rootCategory=INFO, console` to `log4j.rootCategory=ERROR, console`
+`
 
