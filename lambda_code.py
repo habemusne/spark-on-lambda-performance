@@ -30,7 +30,7 @@ CPU_MEASURE = {
 MEM_MEASURE = {
     'filepath': '/proc/meminfo',
     'pattern': [
-
+        #TODO
     ],
 }
 
@@ -66,6 +66,7 @@ def _record_system_info():
         instance_root_id = _regex_get(r'(sandbox-root-.{6})', f.read(), 'UNKNOWN')
     cpu_info = _parse_file(CPU_MEASURE['filepath'], CPU_MEASURE['patterns'])
     mem_info = _parse_file(MEM_MEASURE['filepath'], MEM_MEASURE['patterns'])
+    #TODO
 
 
 def list_all_files():
