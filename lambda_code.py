@@ -1,73 +1,23 @@
-"""
-NOT DONE YET
-"""
-
 from __future__ import print_function
 import boto3
 import os
 import sys
 import uuid
 import zipfile
-import socket
-import time
 import logging
 from subprocess import call
-from re import findall
-from collections import defaultdict
 
-CPU_MEASURE = {
-    'filepath': '/proc/cpuinfo',
-    'patterns': [
-        ['processor', r'^processor\s*:\s*(\d+)$'],
-        ['model_name', r'^model\sname\s*:\s*(.*)'],
-        ['vendor_id', r'^vendor_id\s*:\s*(.*)'],
-        ['cpu_family', r'^cpu\sfamily\s*:\s*(.*)'],
-        ['model', r'^model\s*:\s*(.*)'],
-        ['cpu_mhz', r'^cpu\sMHz\s*:\s*(.*)'],
-        ['cpu_cores', r'cpu\scores\s*:\s*(.*)'],
-    ],
-}
-MEM_MEASURE = {
-    'filepath': '/proc/meminfo',
-    'pattern': [
-        #TODO
-    ],
-}
+from time import time
+from random import choice
+from string import ascii_lowercase
+
+import util
+MEASUREMENT_BUCKET = 'mc-cse597cc'
+TMP_FILEDIR = '/tmp/lambda'
 
 boto3.set_stream_logger(name='boto3', level=logging.ERROR)
 boto3.set_stream_logger(name='botocore', level=logging.ERROR)
 s3_client = boto3.client('s3')
-
-
-def _regex_get(pattern, string, default):
-    res = findall(pattern, string)
-    return res[0] if res else default
-
-
-def _parse_file(filepath, patterns):
-    with open(filepath, 'r') as f:
-        info = defaultdict
-        curr = -1
-        for line in f:
-            line = line.strip()
-            for i, pair in enumerate(patterns):
-                res = _regex_get(pair[1], line, None):
-                # if line is "processor: <id>", switch to record info of this <id>
-                if i == 0:
-                    curr = res
-                # if line has other wanted info, record it
-                else:
-                    info[curr][pair[0]] = res
-        return info
-
-
-def _record_system_info():
-    with open('/proc/self/cgroup', 'r') as f:
-        instance_root_id = _regex_get(r'(sandbox-root-.{6})', f.read(), 'UNKNOWN')
-    cpu_info = _parse_file(CPU_MEASURE['filepath'], CPU_MEASURE['patterns'])
-    mem_info = _parse_file(MEM_MEASURE['filepath'], MEM_MEASURE['patterns'])
-    #TODO
-
 
 def list_all_files():
     for f in os.listdir('/tmp'):
@@ -75,7 +25,6 @@ def list_all_files():
     for f in os.listdir('/tmp/lambda'):
         print('/tmp/lambda/' + f)
     print("-----------------------")
-
 
 def run_executor(spark_driver_hostname, spark_driver_port, spark_executor_cmdline, java_partial_cmdline, executor_partial_cmdline, java_extra_options):
     #cmdline = spark_executor_cmdline
@@ -87,10 +36,11 @@ def run_executor(spark_driver_hostname, spark_driver_port, spark_executor_cmdlin
     call(cmdline_arr)
     print("FINISH: Spark executor")
 
-
 def handler(event, context):
+    lambda_exec_start = time()
     print('START: ')
     print(event)
+    print(dir(context))
 
     print(context.function_name)
     print(context.function_version)
@@ -148,11 +98,23 @@ def handler(event, context):
     print('FINISH: Downloading spark tarball')
 
     print('START: executor')
-    run_executor(spark_driver_hostname, spark_driver_port, spark_executor_cmdline,
-        java_partial_cmdline, executor_partial_cmdline, java_extra_options)
-    print('FINISH: executor')
-    open('/tmp/lambda/spark-installed', 'a').close()
-    print('FINISH')
-    return {
-        'output' : 'Handler done'
-    }
+    executor_exec_start = time()
+    try:
+        run_executor(spark_driver_hostname, spark_driver_port, spark_executor_cmdline,
+            java_partial_cmdline, executor_partial_cmdline, java_extra_options)
+        print('FINISH: executor')
+        open('/tmp/lambda/spark-installed', 'a').close()
+    except:
+        import traceback; traceback.print_exc()
+    finally:
+        lambda_exec_end = executor_exec_end = time()
+        data = util.get_sys_info()
+        data['lambda_exec_time'] = lambda_exec_end - lambda_exec_start
+        data['executor_exec_time'] = executor_exec_end - executor_exec_start
+        key = 'measurement-{}.txt'.format(''.join(choice(ascii_lowercase) for i in range(6)))
+        util.upload(MEASUREMENT_BUCKET, key, data, TMP_FILEDIR)
+        print('Upload done: {}'.format(key))
+
+        return {
+            'output' : 'Handler done'
+        }
