@@ -181,13 +181,15 @@ This update includes measuring system info.
 
 ## Setup
 
+At your EC2, run `pip install boto3 -U --user`.
+
 In the Lambda console, add a new file `util.py` and copy paste the [code](util.py) into it.
 
-Next you need to edit `lambda_function.py`. Copy paste this [code](lambda_code.py) into it. The new code collects system info of the machine where the Lambda function is located. It uploads the collected data to S3.
+In the Lambda console, edit `lambda_function.py`. Copy paste this [code](lambda_code.py) into it. The new code collects system info of the machine where the Lambda function is located. It uploads the collected data to S3.
 
-In `lambda_function.py`, edit global variable `MEASUREMENT_BUCKET` to be your bucket.
+In the Lambda console, in `lambda_function.py`, edit global variable `MEASUREMENT_BUCKET` to be your bucket.
 
-Next you need to edit your spark code (i.e. kmeans, pagerank, em). I've only provided a [Python example](spark_code_example.py), so you need to translate it to Scala if you need to. Please don't directly copy paste the Python example, since you all have your own Spark code. Instead, follow these steps.
+In EC2, follow the following steps to edit your spark code (i.e. kmeans, pagerank, em). Note that I've only provided a [Python example](spark_code_example.py), so you please translate it to Scala if you need to. Please don't directly copy paste the Python example, since you all have your own Spark code. Instead, follow these steps.
 
 Firstly including these lines at the top of the file:
 
@@ -212,37 +214,41 @@ Then at the beginning of your main function, add these code to clean up previous
 ```
 # def main():
 
-objs = s3.list_objects(Bucket=MEASUREMENT_BUCKET, Prefix='measurement-').get('Contents', [])
-if objs:
-    s3.delete_objects(Bucket=MEASUREMENT_BUCKET, Delete={
-        'Objects': [{'Key': obj['Key']} for obj in objs],
-    })
+    objs = s3.list_objects(Bucket=MEASUREMENT_BUCKET, Prefix='measurement-').get('Contents', [])
+    if objs:
+        s3.delete_objects(Bucket=MEASUREMENT_BUCKET, Delete={
+            'Objects': [{'Key': obj['Key']} for obj in objs],
+        })
 
-# rest of the file
+# rest of the file...
 ```
 
 Then at the end of your main function, add these code to download sys info data and do the analytics:
 
 ```
-sleep(5)  # wait for a while to handle the case when Spark closes connection before Lambda
+    # other code...
 
-# Gather measurement data
-objs = s3.list_objects(Bucket=MEASUREMENT_BUCKET, Prefix='measure').get('Contents', [])
-for obj in objs:
-    filepath = os.path.join(MEASUREMENT_DIR, obj['Key'].split('/')[-1])
-    s3.download_file(MEASUREMENT_BUCKET, obj['Key'], filepath)
+    sleep(5)  # wait for a while to handle the case when Spark closes connection before Lambda
 
-data = {}  # Now suppose that "data" contains your analytics result
-for fname in os.listdir(MEASUREMENT_DIR):
-    #### Write your data analytics logic here
-    filepath = os.path.join(MEASUREMENT_DIR, fname)
-    with open(filepath, 'r') as f:
-        print(f.read())
-    print('------------')
-print(data)
+    # Gather measurement data
+    objs = s3.list_objects(Bucket=MEASUREMENT_BUCKET, Prefix='measure').get('Contents', [])
+    for obj in objs:
+        filepath = os.path.join(MEASUREMENT_DIR, obj['Key'].split('/')[-1])
+        s3.download_file(MEASUREMENT_BUCKET, obj['Key'], filepath)
+
+    data = {}  # Now suppose that "data" contains your analytics result
+    for fname in os.listdir(MEASUREMENT_DIR):
+        #### Write your data analytics logic here
+        filepath = os.path.join(MEASUREMENT_DIR, fname)
+        with open(filepath, 'r') as f:
+            print(f.read())
+        print('------------')
+    print(data)
+
+    # end of main()
 ```
 
-Now when you run spark-submit and wait until it completes, the measurement data collected by Lambda will reside at `~/project/measurement`. Please also run `pip install boto3 -U --user` for dependency. The data contains:
+Now when you run spark-submit and wait until it completes, the measurement data collected by Lambda will reside at `~/project/measurement`. The data contains:
 
 - `instance_root_id`: the unique identifier of the vm where the Lambda function resides
 
