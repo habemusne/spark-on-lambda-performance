@@ -223,7 +223,7 @@ Then at the beginning of your main function, add these code to clean up previous
 # rest of the file...
 ```
 
-Then at the end of your main function, add these code to download sys info data and do the analytics:
+Then at the end of your main function, add these code to download sys info data:
 
 ```
     # other code...
